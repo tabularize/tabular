@@ -2,6 +2,69 @@
     text-align: center;
 }
 
+.tb-ovrflw {
+    overflow-x:auto;
+}
+
+.tabular {
+    width: 100%;
+    text-align: center;
+}
+
+.tabular {
+    font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.tabular td, .tabular th {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+
+.tabular tr:nth-child(even){background-color: #f2f2f2;}
+
+.tabular tr:hover {background-color: #ddd;}
+
+.success-msg {
+    color: green;
+    font-weight: 600;
+}
+
+.error-msg {
+    color: red;
+    font-weight: 600;
+}
+
+.thead, .tfoot {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 2px 8px 2px;
+    font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+    font-size: 14px;
+}
+
+.thead select {
+    height: 30px;
+    margin-left: 5px;
+}
+
+.thead>input {
+    height: 30px;
+    border: 1px solid #ccc;
+    padding: 10px;
+}
+
+.thead>div, .tfoot>span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/*
+ * Pagination CSS
+ */
+
 .pagination {
     display: inline-block;
 }
@@ -46,91 +109,8 @@
 
 .paginate_button.disabled {
     cursor: default;
-    color: #666 !important;
+    color: #ccc !important;
     border: 1px solid transparent;
     background: transparent;
     box-shadow: none;
-}
-
-.tabular {
-    width: 100%;
-    text-align: center;
-}
-
-.tabular {
-    font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
-    border-collapse: collapse;
-    width: 100%;
-}
-
-.tabular td, .tabular th {
-    border: 1px solid #ddd;
-    padding: 8px;
-}
-
-.tabular tr:nth-child(even){background-color: #f2f2f2;}
-
-.tabular tr:hover {background-color: #ddd;}
-
-.success-msg {
-    color: green;
-    font-weight: 600;
-}
-
-.error-msg {
-    color: red;
-    font-weight: 600;
-}
-
-/*.pagination a {*/
-    /*color: black;*/
-    /*float: left;*/
-    /*padding: 6px 12px;*/
-    /*text-decoration: none;*/
-    /*transition: background-color .3s;*/
-    /*border: 1px solid #ddd;*/
-    /*border-radius: 2px;*/
-    /*margin: 0 4px;*/
-/*}*/
-
-/*.pagination span {*/
-    /*color: black;*/
-    /*float: left;*/
-    /*padding: 8px 16px;*/
-    /*text-decoration: none;*/
-    /*transition: background-color .3s;*/
-    /*margin: 0 4px;*/
-/*}*/
-
-/*.pagination a.active {*/
-    /*background-color: #4CAF50;*/
-    /*color: white;*/
-    /*border: 1px solid #4CAF50;*/
-/*}*/
-
-/*.pagination a:hover:not(.active) {background-color: #ddd;}*/
-
-#table-head, #table-foot {
-    display: flex;
-    justify-content: space-between;
-    padding: 8px 2px 8px 2px;
-    font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
-    font-size: 14px;
-}
-
-#table-head select {
-    height: 30px;
-    margin-left: 5px;
-}
-
-#table-head>input {
-    height: 30px;
-    border: 1px solid #ccc;
-    padding: 10px;
-}
-
-#table-head>div, #table-foot>span {
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }

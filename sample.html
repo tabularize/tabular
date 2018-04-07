@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TABULAR SAMPLE</title>
+</head>
+<link rel="stylesheet" href="./tabular.css" media="all">
+<script src="./tabular.js"></script>
+<body>
+<div style="margin: auto auto; width: 800px; ">
+    <h4>Below Table has been built with Array of JSON as source data</h4>
+
+    <div id="buildTable"></div>
+</div>
+<div style="margin: auto auto; width: 800px; margin-top: 60px">
+    <hr>
+</div>
+<div style="margin: auto auto; width: 800px; ">
+    <h4>Below Table has been converted from an HTML table</h4>
+
+    <table id="convertTable" type="" border="0" tabindex="20">
+        <tbody>
+        <tr>
+            <th>Request ID</th>
+            <th>Filename</th>
+            <th>TimeStamp</th>
+            <th>Status</th>
+            <th>Link</th>
+        </tr>
+        <tr>
+            <td>1522746015946</td>
+            <td>Report-1522746015946.csv</td>
+            <td>2018/04/03 14:30:15</td>
+            <td class="success-msg">READY</td>
+            <td><a href="https://sandbox-cdn.formistry.com/0010000010010I/00000005/Report-1522746015946.csv"
+                   target="_blank">Download</a></td>
+        </tr>
+        <tr>
+            <td>1522744572849</td>
+            <td>Report-1522744572849.csv</td>
+            <td>2018/04/03 14:06:12</td>
+            <td class="success-msg">READY</td>
+            <td><a href="https://sandbox-cdn.formistry.com/0010000010010I/00000005/Report-1522744572849.csv"
+                   target="_blank">Download</a></td>
+        </tr>
+        <tr>
+            <td>1522743671284</td>
+            <td>Report-1522743671284.csv</td>
+            <td>2018/04/03 13:51:11</td>
+            <td class="success-msg">READY</td>
+            <td><a href="https://sandbox-cdn.formistry.com/0010000010010I/00000005/Report-1522743671284.csv"
+                   target="_blank">Download</a></td>
+        </tr>
+        <tr>
+            <td>1522651779116</td>
+            <td>Report-1522651779116.csv</td>
+            <td>2018/04/02 12:19:39</td>
+            <td class="success-msg">READY</td>
+            <td><a href="https://sandbox-cdn.formistry.com/0010000010010I/00000005/Report-1522651779116.csv"
+                   target="_blank">Download</a></td>
+        </tr>
+        <tr>
+            <td>1522649933815</td>
+            <td>Report-1522649933815.csv</td>
+            <td>2018/04/02 11:48:53</td>
+            <td class="success-msg">READY</td>
+            <td><a href="https://sandbox-cdn.formistry.com/0010000010010I/00000005/Report-1522649933815.csv"
+                   target="_blank">Download</a></td>
+        </tr>
+        <tr>
+            <td>1522649929351</td>
+            <td>Report-1522649929351.csv</td>
+            <td>2018/04/02 11:48:49</td>
+            <td class="success-msg">READY</td>
+            <td><a href="https://sandbox-cdn.formistry.com/0010000010010I/00000005/Report-1522649929351.csv"
+                   target="_blank">Download</a></td>
+        </tr>
+        <tr>
+            <td>1522649752568</td>
+            <td>Report-1522649752568.csv</td>
+            <td>2018/04/02 11:45:52</td>
+            <td class="success-msg">READY</td>
+            <td><a href="https://sandbox-cdn.formistry.com/0010000010010I/00000005/Report-1522649752568.csv"
+                   target="_blank">Download</a></td>
+        </tr>
+        <tr>
+            <td>1522649712699</td>
+            <td>Report-1522649712699.csv</td>
+            <td>2018/04/02 11:45:12</td>
+            <td class="success-msg">READY</td>
+            <td><a href="https://sandbox-cdn.formistry.com/0010000010010I/00000005/Report-1522649712699.csv"
+                   target="_blank">Download</a></td>
+        </tr>
+        <tr>
+            <td>1522649643937</td>
+            <td>Report-1522649643937.csv</td>
+            <td>2018/04/02 11:44:03</td>
+            <td class="success-msg">READY</td>
+            <td><a href="https://sandbox-cdn.formistry.com/0010000010010I/00000005/Report-1522649643937.csv"
+                   target="_blank">Download</a></td>
+        </tr>
+        <tr>
+            <td>1522649635742</td>
+            <td>Report-1522649635742.csv</td>
+            <td>2018/04/02 11:43:55</td>
+            <td class="success-msg">READY</td>
+            <td><a href="https://sandbox-cdn.formistry.com/0010000010010I/00000005/Report-1522649635742.csv"
+                   target="_blank">Download</a></td>
+        </tr>
+        <tr>
+            <td>1522569927471</td>
+            <td>Report-1522569927471.csv</td>
+            <td>2018/04/01 13:35:27</td>
+            <td class="error-msg">FAILED</td>
+            <td><a href="undefined" target="_blank"></a><i class="fa fa-refresh fa-spin"></i></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+</body>
+
+<script type="text/javascript">
+    let CT = new TABULAR();
+    let BT = new TABULAR();
+
+    CT.convertToTabular('convertTable');
+
+    let sampleData = [{"_id":"5ac342a1fbcfd86810e99ccc","fid":"0010000010010I","timestamp":1522746015946,"uid":"00000005","filename":"Report-1522746015946.csv","status":"READY","url":"https://sandbox-cdn.formistry.com/0010000010010I/00000005/Report-1522746015946.csv","downloadCount":0,"notified":0},{"_id":"5ac33cfefbcfd86810e9994a","fid":"0010000010010I","timestamp":1522744572849,"uid":"00000005","filename":"Report-1522744572849.csv","status":"READY","url":"https://sandbox-cdn.formistry.com/0010000010010I/00000005/Report-1522744572849.csv","downloadCount":0,"notified":0},{"_id":"5ac33978fbcfd86810e9971d","fid":"0010000010010I","timestamp":1522743671284,"uid":"00000005","filename":"Report-1522743671284.csv","status":"READY","url":"https://sandbox-cdn.formistry.com/0010000010010I/00000005/Report-1522743671284.csv","downloadCount":0,"notified":0},{"_id":"5ac1d284fbcfd86810e912a4","fid":"0010000010010I","timestamp":1522651779116,"uid":"00000005","filename":"Report-1522651779116.csv","status":"READY","url":"https://sandbox-cdn.formistry.com/0010000010010I/00000005/Report-1522651779116.csv","downloadCount":0,"notified":0},{"_id":"5ac1cb4efbcfd86810e90f6b","fid":"0010000010010I","timestamp":1522649933815,"uid":"00000005","filename":"Report-1522649933815.csv","status":"READY","url":"https://sandbox-cdn.formistry.com/0010000010010I/00000005/Report-1522649933815.csv","downloadCount":0,"notified":0},{"_id":"5ac1cb4afbcfd86810e90f57","fid":"0010000010010I","timestamp":1522649929351,"uid":"00000005","filename":"Report-1522649929351.csv","status":"READY","url":"https://sandbox-cdn.formistry.com/0010000010010I/00000005/Report-1522649929351.csv","downloadCount":0,"notified":0},{"_id":"5ac1ca99fbcfd86810e90edd","fid":"0010000010010I","timestamp":1522649752568,"uid":"00000005","filename":"Report-1522649752568.csv","status":"READY","url":"https://sandbox-cdn.formistry.com/0010000010010I/00000005/Report-1522649752568.csv","downloadCount":0,"notified":0},{"_id":"5ac1ca72fbcfd86810e90eb2","fid":"0010000010010I","timestamp":1522649712699,"uid":"00000005","filename":"Report-1522649712699.csv","status":"READY","url":"https://sandbox-cdn.formistry.com/0010000010010I/00000005/Report-1522649712699.csv","downloadCount":0,"notified":0},{"_id":"5ac1ca2cfbcfd86810e90e74","fid":"0010000010010I","timestamp":1522649643937,"uid":"00000005","filename":"Report-1522649643937.csv","status":"READY","url":"https://sandbox-cdn.formistry.com/0010000010010I/00000005/Report-1522649643937.csv","downloadCount":0,"notified":0},{"_id":"5ac1ca25fbcfd86810e90e5d","fid":"0010000010010I","timestamp":1522649635742,"uid":"00000005","filename":"Report-1522649635742.csv","status":"READY","url":"https://sandbox-cdn.formistry.com/0010000010010I/00000005/Report-1522649635742.csv","downloadCount":0,"notified":0},{"_id":"5ac092c9fbcfd86810e8c3e7","fid":"0010000010010I","timestamp":1522569927471,"uid":"00000005","filename":"Report-1522569927471.csv","status":"FAILED"}];
+    BT.buildTabular('buildTable', sampleData);
+
+</script>
+
+</html>
+

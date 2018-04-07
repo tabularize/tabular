@@ -1,14 +1,10 @@
-function TABULAR(id){
-    this.eleId = id;
-    this.tableEle = document.getElementById(id);
-    this.tableEle.classList.add("tabular"); //Added class to table tag
-    this.parentNode = this.tableEle.parentNode;
-    this.tableHeadNode , this.tableFootNode;
-    this.numOfRows , this.numOfColumns;
-    this.headerMap = new Map();
-    this.tableData = {};
+function TABULAR(){
+    this.unique = parseInt(Math.random() * 1000).toString();
+    this.eleId, this.tableEle, this.parentNode, this.tableHeadNode , this.tableFootNode, this.numOfRows , this.numOfColumns;
+    this.headerMap = {};
+    this.tableData = [];
     this.rowLimitOps = [15, 30, 50, 100];
-    this.rowsPerPage = 15; //default
+    this.rowsPerPage = 5; //default
     this.currentPage = 1; //Default - required for pagination
     this.totalPages = this.getTotalNumberOfPages(); // required for pagination
     this.currentPageInfo = new Map();
@@ -17,32 +13,99 @@ function TABULAR(id){
     this.sortSeq = "asc"; //default
     this.filterKeyword = '';
 
+    /**
+     * Initialising all unique ids
+     */
+    this.tableHeadId = "t-h-" + this.unique;
+    this.tableFootId = "t-f-" + this.unique;
+    this.pageInfoSpanId = "pg-inf-" + this.unique;
+    this.rwLimitId = "rw-l-" + this.unique;
+    this.paginationId = 'pgn-' + this.unique;
+    this.filterKeywordId = 'flt-kw-'+this.unique;
+}
+
+TABULAR.prototype.convertToTabular = function(id, config=false){
+    if('' === id || !id){
+        console.error("`id` of the Source Table required..");
+        return false;
+    }
+
+    this.eleId = id;
+    this.tableEle = _$(id);
+    this.tableEle.classList.add("tabular"); //Added class to table tag
+    let gparent = this.tableEle.parentNode;
+    gparent.removeChild(this.tableEle);
+    this.parentNode = this.pushElementsInsideDiv([this.pushElementsInsideDiv([this.tableEle], ["tb-ovrflw"])]);
+    this.parentNode.id = 'tblr-prnt-' + this.unique;
+    gparent.appendChild(this.parentNode);
+
+    this.getTableData();
+
+    this._init();
+}
+
+/**
+ * Call to build a 'tabular' table from an array of JSON
+ * @param data - Array of JSON - REQUIRED
+ * @param targetId - Target id of the element where the table will be appended - REQUIRED
+ * @param config - Config JSON - OPTIONAL
+ */
+TABULAR.prototype.buildTabular = function (targetId, data, fieldConfig={}) {
+    if(!data || 'object' !== typeof data){
+        console.error("Invalid data format. The data must be an Array of Objects..");
+        return false;
+    }
+
+    // if(!targetId || '' === targetId){
+    //     console.error("Target Id of the element is required...");
+    //     return false;
+    // }
+
+    //Now creating new Table Element and its parent
+    this.tableEle = document.createElement("TABLE");
+    this.tableEle.id = "tabular_" + this.unique;
+    this.tableEle.classList.add("tabular");
+    // this.parentNode = this.pushElementsInsideDiv([this.tableEle]);
+    this.parentNode = this.pushElementsInsideDiv([this.pushElementsInsideDiv([this.tableEle], ["tb-ovrflw"])]);
+    let gp = _$(targetId);
+    gp.appendChild(this.parentNode);
+
+    this.buildTableData(data, fieldConfig);
+    console.log(this.headerMap, "DATA->", this.tableData);
+    console.log(this.headerMap, this.tableData);
+
     this._init();
 }
 
 TABULAR.prototype._init = function (update = false) {
-    if(update)
+    if(update){
         this.currentPage = 1;
+
+        /**
+         * Setting current page info
+         */
+        this.getCurrentPageInfo();
+
+        /**
+         * Making DOM modifications to table
+         */
+        this.addDOMFootProperties();
+    }
     else {
-        this.getNumberOfRows();
-        this.getNumberOfColumns();
-        this.getTableData();
         /**
          * Initialize Listeners
          */
+        this.getNumberOfRows();
         this.initializeListeners(this);
-    }
-    /**
-     * Setting current page info
-     */
-    this.getCurrentPageInfo();
 
-    /**
-     * Making DOM modifications to table
-     */
-    if(update)
-        this.addDOMFootProperties();
-    else {
+        /**
+         * Setting current page info
+         */
+        this.getCurrentPageInfo();
+
+        /**
+         * Making DOM modifications to table
+         */
         this.addDOMHeadProperties();
         this.addDOMFootProperties();
     }
@@ -51,6 +114,11 @@ TABULAR.prototype._init = function (update = false) {
      * Setting Table Data
      */
     this.setTableData();
+
+    /**
+     * Update Page Info Span
+     */
+    this.updatePageInfoSpan();
 
     /**
      * Checking and Showing Pagination
@@ -62,26 +130,28 @@ TABULAR.prototype._init = function (update = false) {
 
 TABULAR.prototype.addDOMHeadProperties = function () {
     this.parentNode.insertBefore(this.attachTableTopDiv(), this.parentNode.firstChild);
-    this.parentNode.appendChild(this.attachTableBottomDiv());
-    this.tableHeadNode = document.getElementById('table-head');
+    this.tableHeadNode = _$(this.tableHeadId);
 }
 
 TABULAR.prototype.addDOMFootProperties = function () {
-    if(document.getElementById('table-foot'))
-        document.getElementById('table-foot').innerHTML = '';
+    if(_$(this.tableFootId))
+        _$(this.tableFootId).innerHTML = '';
     this.parentNode.appendChild(this.attachTableBottomDiv());
-    this.tableFootNode = document.getElementById('table-foot');
+    this.tableFootNode = _$(this.tableFootId);
 }
 
 TABULAR.prototype.attachTableTopDiv = function () {
     let divEle = '';
-    if(document.getElementById('table-head')){
-        divEle = document.getElementById('table-head');
+    if(_$(this.tableHeadId)){
+        divEle = _$(this.tableHeadId);
         divEle.innerHTML = '';
     } else {
         divEle = document.createElement("DIV");
-        divEle.id = "table-head";
+        divEle.id = this.tableHeadId;
     }
+    if(!divEle.classList.contains("thead"))
+        divEle.classList.add("thead");
+
     //Attaching the Rows per Page DropDown
     divEle.appendChild(this.createNumRowsDropDown());
     // divEle.appendChild(this.createSearchInput());
@@ -90,13 +160,15 @@ TABULAR.prototype.attachTableTopDiv = function () {
 
 TABULAR.prototype.attachTableBottomDiv = function () {
     let divEle = '';
-    if(document.getElementById('table-foot')){
-        divEle = document.getElementById('table-foot');
+    if(_$(this.tableFootId)){
+        divEle = _$(this.tableFootId);
         divEle.innerHTML = '';
     } else {
         divEle = document.createElement("DIV");
-        divEle.id = "table-foot";
+        divEle.id = this.tableFootId;
     }
+    if(!divEle.classList.contains("tfoot"))
+        divEle.classList.add("tfoot");
     //Attaching the Rows per Page DropDown
     divEle.appendChild(this.createPageInfoSpan());
     return divEle;
@@ -107,13 +179,13 @@ TABULAR.prototype.createNumRowsDropDown = function () {
     dd[0] = document.createElement("LABEL");
     dd[0].innerHTML = "Rows per page:";
     dd[1] = document.createElement("SELECT");
-    dd[1].id = "row-limit";
+    dd[1].id = this.rwLimitId;
     this.rowLimitOps.forEach(n => {
         let op = new Option();
-        op.value = n;
-        op.text = n;
-        dd[1].options.add(op);
-    });
+    op.value = n;
+    op.text = n;
+    dd[1].options.add(op);
+});
     //Using function 'pushElementsInsideDiv' to put label and select inside one div
     return this.pushElementsInsideDiv(dd);
 }
@@ -122,9 +194,14 @@ TABULAR.prototype.createNumRowsDropDown = function () {
  * @param ele : array of elements to be pushed inside a div
  * @return {*} : the div element is returned containing the array elements as its children
  */
-TABULAR.prototype.pushElementsInsideDiv = function (ele) {
+TABULAR.prototype.pushElementsInsideDiv = function (ele, classArr=[]) {
     // console.log(ele);
     let divEle = document.createElement("DIV");
+    if(classArr.length){
+        for(let c of classArr)
+            divEle.classList.add(c);
+    }
+
     for(let i of ele)
         divEle.appendChild(i);
     return divEle;
@@ -133,11 +210,11 @@ TABULAR.prototype.pushElementsInsideDiv = function (ele) {
 TABULAR.prototype.createPageInfoSpan = function () {
     let pgSpan = '';
     //clear span if any
-    if(document.getElementById('page-info'))
-        pgSpan = document.getElementById('page-info');
+    if(_$(this.pageInfoSpanId))
+        pgSpan = _$(this.pageInfoSpanId);
     else{
         pgSpan = document.createElement("SPAN");
-        pgSpan.id = "page-info";
+        pgSpan.id = this.pageInfoSpanId;
     }
     pgSpan.innerHTML = ``;
     pgSpan.innerHTML = `Showing ${this.currentPageInfo.get('startRow')} to ${this.currentPageInfo.get('endRow')} of ${this.numOfRows} entries`;
@@ -147,8 +224,8 @@ TABULAR.prototype.createPageInfoSpan = function () {
 TABULAR.prototype.updatePageInfoSpan = function () {
     let pgSpan = '';
     //clear span if any
-    if(document.getElementById('page-info')){
-        pgSpan = document.getElementById('page-info');
+    if(_$(this.pageInfoSpanId)){
+        pgSpan = _$(this.pageInfoSpanId);
         pgSpan.innerHTML = ``;
         pgSpan.innerHTML = `Showing ${this.getCurrentPageInfo().get('startRow')} to ${this.getCurrentPageInfo().get('endRow')} of ${this.numOfRows} entries`;
     }
@@ -156,13 +233,17 @@ TABULAR.prototype.updatePageInfoSpan = function () {
 
 TABULAR.prototype.createSearchInput = function () {
     let searchInput = document.createElement("INPUT");
-    searchInput.id = "filter-keyword";
+    searchInput.id = this.filterKeywordId;
     searchInput.placeholder = "Search";
     return searchInput;
 }
 
 TABULAR.prototype.getNumberOfRows = function(){
-    this.numOfRows = this.tableEle.rows.length - 1; //-1 to remove header row in count
+    if(this.tableData && this.tableData.length)
+        this.numOfRows = this.tableData.length;
+    else
+        this.numOfRows = this.tableEle.rows.length - 1; //-1 to remove header row in count
+
     return this.numOfRows;
 }
 
@@ -181,6 +262,7 @@ TABULAR.prototype.getCurrentPageInfo = function () {
     let endRow = this.rowsPerPage * (this.currentPage-1) + this.rowsPerPage;
     if(endRow > this.numOfRows)
         endRow = this.numOfRows;
+
     this.currentPageInfo.set('startRow', startRow);
     this.currentPageInfo.set('endRow', endRow);
     this.currentPageInfo.set('startRowIndex', startRow-1);
@@ -195,31 +277,85 @@ TABULAR.prototype.updatePageInfo = function () {
 }
 
 TABULAR.prototype.getTableData = function () {
-    /**
-     * Getting headers first from <th>
-     */
-    let headerRow = this.tableEle.rows.item(0).cells;
-    let headIndex = 0;
-    while(headIndex < headerRow.length){
-        let val = headerRow.item(headIndex).innerHTML;
-        this.headerMap.set(headIndex, [val.toLowerCase().replace(/\s/, '-'), val]);
-        headIndex++;
-    }
-    let startIndex = 0;
-    let data = [];
-    while(startIndex < this.numOfRows){
-        data[startIndex] = [];
-        let singleRow = this.tableEle.rows.item(startIndex+1).cells;
-        let numOfCols = singleRow.length;
-        let colIndex = 0;
-        while(numOfCols > colIndex){
-            data[startIndex].push(singleRow.item(colIndex).innerHTML);
-            colIndex++;
+    try {
+        /**
+         * Getting headers first from <th>
+         */
+        let hdrArrKeys = [];
+        let headerRow = this.tableEle.rows.item(0).cells;
+        for(let hdr of headerRow){
+            let val = hdr.innerHTML;
+            this.headerMap[val.toLowerCase().replace(/[\s\\.]/, '_')] = val;
+            hdrArrKeys.push(val.toLowerCase().replace(/[\s\\.]/, '_'));
         }
-        startIndex++;
+        // let startIndex = 0;
+        let data = [];
+
+        /**
+         * !!!IMPORTANT - Throwing error if no <TH> found for header cells...
+         */
+        if("TH" !== this.tableEle.rows.item(0).cells.item(0).nodeName)
+            throw "No <TH> found inside header row. Please provide header cells with <TH>";
+
+        //Considering first row as header row, which is mandatory
+        let headerSkip = true;
+        for(let r of this.tableEle.rows){
+            if(headerSkip){
+                headerSkip = false;
+                continue;
+            }
+
+            let localJson = {};
+            let cellCount = 0;
+            while(cellCount < hdrArrKeys.length){
+                localJson[hdrArrKeys[cellCount]] = r.cells[cellCount].innerHTML;
+                cellCount++;
+            }
+            localJson && Object.keys(localJson).length ? data.push(localJson) : false;
+        }
+        this.tableData = data;
     }
+    catch (err){
+        console.error(err);
+    }
+}
+
+TABULAR.prototype.buildTableData = function (srcData, config = false) {
+    let headerMap = false;
+    let data = [];
+    if(config && 'object' === typeof config && Object.keys(config).length){
+        this.headerMap = this.setTableHeader(config);
+        headerMap = this.headerMap;
+    }
+
+    for(let row of srcData){
+        let arr = {};
+        if(headerMap){
+            Object.keys(headerMap).forEach(hm => {
+                arr[hm] = {};
+            arr[hm] = row[hm] || "";
+        });
+        } else {
+            Object.keys(row).forEach(c => {
+                this.headerMap[c.toLowerCase().replace(/\s/, '-')] = c;
+
+            arr[c] = {};
+            arr[c] = row[c];
+        });
+        }
+        data.push(arr);
+    }
+
     this.tableData = data;
-    // console.log(this.headerMap, this.tableData);
+}
+
+TABULAR.prototype.setTableHeader = (config) => {
+    let hMap = {};
+    Object.keys(config).forEach(key => {
+        hMap[key] = {};
+    hMap[key] = config[key] && config[key]["label"] ? config[key]["label"] : (key.toUpperCase() || key);
+})
+    return hMap;
 }
 
 TABULAR.prototype.setTableData = function(){
@@ -229,13 +365,13 @@ TABULAR.prototype.setTableData = function(){
     //Stitch Table Headers first
     let head = this.tableEle.createTHead();
     let hRow = head.insertRow(0);
-    for(let [key, value] of this.headerMap){
+    Object.keys(this.headerMap).forEach(hdr => {
         let hCell = document.createElement("TH");
-        hCell.innerHTML = value[1];
-        hRow.appendChild(hCell);
-    }
+    hCell.innerHTML = this.headerMap[hdr];
+    hRow.appendChild(hCell);
+});
 
-    this.getCurrentPageInfo();
+    // this.getCurrentPageInfo();
     //Now stitching data to table
     //Calculate Starting Index
     let outerIndex = this.currentPageInfo.get('startRowIndex');
@@ -245,15 +381,23 @@ TABULAR.prototype.setTableData = function(){
     while(outerIndex <= outerIndexLimit){
         let tRow = tBody.insertRow(tRowIndex);
         let innerIndex = 0;
-        while(innerIndex < this.tableData[outerIndex].length){
-            tRow.insertCell(innerIndex).innerHTML = this.tableData[outerIndex][innerIndex];
-            innerIndex++;
-        }
+        Object.keys(this.tableData[outerIndex]).forEach(cell => {
+            tRow.insertCell(innerIndex).innerHTML = this.tableData[outerIndex][cell];
+        innerIndex++;
+    });
+        // while(innerIndex < this.tableData[outerIndex].length){
+        //     tRow.insertCell(innerIndex).innerHTML = this.tableData[outerIndex][innerIndex];
+        //     innerIndex++;
+        // }
         tRowIndex++;
         outerIndex++;
     }
+}
 
-    this.createPageInfoSpan();
+TABULAR.prototype.redrawTable = function () {
+    this.setTableData()
+    this.updatePageInfoSpan();
+    this.modifyPagination();
 }
 
 TABULAR.prototype.changePage = function (tgtPage) {
@@ -265,9 +409,9 @@ TABULAR.prototype.changePage = function (tgtPage) {
         this.currentPage = parseInt(tgtPage.value);
     }
     this.getCurrentPageInfo();
-    this.setTableData();
-    this.modifyPagination();
+    this.redrawTable();
 }
+
 /**
  * PAGINATION
  */
@@ -288,24 +432,24 @@ TABULAR.prototype.getPaginationHtml = function (shift = false) {
     }
 
     let div1 = '';
-    if(shift && document.getElementById('pagination')){
-        div1 = document.getElementById('pagination');
+    if(shift && _$(this.paginationId)){
+        div1 = _$(this.paginationId);
         div1.innerHTML = "";
     } else {
         div1 = document.createElement("DIV");
-        div1.id = "pagination";
+        div1.id = this.paginationId;
         div1.classList.add("pagination");
     }
     let aN = document.createElement("A");
     aN.value = "NEXT";
-    aN.text = "Next";
+    aN.innerHTML = "&#8680;";
     aN.classList.add('paginate_button');
     if(this.getTotalNumberOfPages() === this.currentPage)
         aN.classList.add('disabled');
 
     let aP = document.createElement("A");
     aP.value = "PREV";
-    aP.text = "Previous";
+    aP.innerHTML = "&#8678;";
     aP.classList.add('paginate_button');
     if(1 === this.currentPage)
         aP.classList.add('disabled');
@@ -356,8 +500,8 @@ TABULAR.prototype.initializeListeners = function () {
         /**
          * Handle Row-Limit Change Event
          */
-        if(e.target && e.target.value && "row-limit" === e.target.id){
-            self.rowsPerPage = e.target.value;
+        if(e.target && e.target.value && self.rwLimitId === e.target.id){
+            self.rowsPerPage = parseInt(e.target.value);
             self._init(true);
         } else
             return false;
@@ -372,4 +516,8 @@ TABULAR.prototype.initializeListeners = function () {
         } else
             return false;
     });
+}
+
+_$ = function (id) {
+    return document.getElementById(id);
 }
