@@ -1,4 +1,4 @@
-function TABULAR(){
+function TABULAR() {
     this.unique = parseInt(Math.random() * 1000).toString();
     this.eleId, this.tableEle, this.parentNode, this.tableHeadNode , this.tableFootNode, this.numOfRows , this.numOfColumns;
     this.headerMap = {};
@@ -21,11 +21,11 @@ function TABULAR(){
     this.pageInfoSpanId = "pg-inf-" + this.unique;
     this.rwLimitId = "rw-l-" + this.unique;
     this.paginationId = 'pgn-' + this.unique;
-    this.filterKeywordId = 'flt-kw-'+this.unique;
+    this.filterKeywordId = 'flt-kw-' + this.unique;
 }
 
-TABULAR.prototype.convertToTabular = function(id, config=false){
-    if('' === id || !id){
+TABULAR.prototype.convertToTabular = function (id, headerConfig = false, actions = false) {
+    if ('' === id || !id) {
         console.error("`id` of the Source Table required..");
         return false;
     }
@@ -50,8 +50,8 @@ TABULAR.prototype.convertToTabular = function(id, config=false){
  * @param targetId - Target id of the element where the table will be appended - REQUIRED
  * @param config - Config JSON - OPTIONAL
  */
-TABULAR.prototype.buildTabular = function (targetId, data, fieldConfig={}) {
-    if(!data || 'object' !== typeof data){
+TABULAR.prototype.buildTabular = function (targetId, data, headerConfig = false, actions = false) {
+    if (!data || 'object' !== typeof data) {
         console.error("Invalid data format. The data must be an Array of Objects..");
         return false;
     }
@@ -70,7 +70,7 @@ TABULAR.prototype.buildTabular = function (targetId, data, fieldConfig={}) {
     let gp = _$(targetId);
     gp.appendChild(this.parentNode);
 
-    this.buildTableData(data, fieldConfig);
+    this.buildTableData(data, headerConfig);
     console.log(this.headerMap, "DATA->", this.tableData);
     console.log(this.headerMap, this.tableData);
 
@@ -78,7 +78,7 @@ TABULAR.prototype.buildTabular = function (targetId, data, fieldConfig={}) {
 }
 
 TABULAR.prototype._init = function (update = false) {
-    if(update){
+    if (update) {
         this.currentPage = 1;
 
         /**
@@ -123,7 +123,7 @@ TABULAR.prototype._init = function (update = false) {
     /**
      * Checking and Showing Pagination
      */
-    if(this.getTotalNumberOfPages() > 1){
+    if (this.getTotalNumberOfPages() > 1) {
         this.tableFootNode.appendChild(this.getPaginationHtml());
     }
 }
@@ -134,7 +134,7 @@ TABULAR.prototype.addDOMHeadProperties = function () {
 }
 
 TABULAR.prototype.addDOMFootProperties = function () {
-    if(_$(this.tableFootId))
+    if (_$(this.tableFootId))
         _$(this.tableFootId).innerHTML = '';
     this.parentNode.appendChild(this.attachTableBottomDiv());
     this.tableFootNode = _$(this.tableFootId);
@@ -142,14 +142,14 @@ TABULAR.prototype.addDOMFootProperties = function () {
 
 TABULAR.prototype.attachTableTopDiv = function () {
     let divEle = '';
-    if(_$(this.tableHeadId)){
+    if (_$(this.tableHeadId)) {
         divEle = _$(this.tableHeadId);
         divEle.innerHTML = '';
     } else {
         divEle = document.createElement("DIV");
         divEle.id = this.tableHeadId;
     }
-    if(!divEle.classList.contains("thead"))
+    if (!divEle.classList.contains("thead"))
         divEle.classList.add("thead");
 
     //Attaching the Rows per Page DropDown
@@ -160,14 +160,14 @@ TABULAR.prototype.attachTableTopDiv = function () {
 
 TABULAR.prototype.attachTableBottomDiv = function () {
     let divEle = '';
-    if(_$(this.tableFootId)){
+    if (_$(this.tableFootId)) {
         divEle = _$(this.tableFootId);
         divEle.innerHTML = '';
     } else {
         divEle = document.createElement("DIV");
         divEle.id = this.tableFootId;
     }
-    if(!divEle.classList.contains("tfoot"))
+    if (!divEle.classList.contains("tfoot"))
         divEle.classList.add("tfoot");
     //Attaching the Rows per Page DropDown
     divEle.appendChild(this.createPageInfoSpan());
@@ -182,10 +182,10 @@ TABULAR.prototype.createNumRowsDropDown = function () {
     dd[1].id = this.rwLimitId;
     this.rowLimitOps.forEach(n => {
         let op = new Option();
-    op.value = n;
-    op.text = n;
-    dd[1].options.add(op);
-});
+        op.value = n;
+        op.text = n;
+        dd[1].options.add(op);
+    });
     //Using function 'pushElementsInsideDiv' to put label and select inside one div
     return this.pushElementsInsideDiv(dd);
 }
@@ -194,15 +194,15 @@ TABULAR.prototype.createNumRowsDropDown = function () {
  * @param ele : array of elements to be pushed inside a div
  * @return {*} : the div element is returned containing the array elements as its children
  */
-TABULAR.prototype.pushElementsInsideDiv = function (ele, classArr=[]) {
+TABULAR.prototype.pushElementsInsideDiv = function (ele, classArr = []) {
     // console.log(ele);
     let divEle = document.createElement("DIV");
-    if(classArr.length){
-        for(let c of classArr)
+    if (classArr.length) {
+        for (let c of classArr)
             divEle.classList.add(c);
     }
 
-    for(let i of ele)
+    for (let i of ele)
         divEle.appendChild(i);
     return divEle;
 }
@@ -210,9 +210,9 @@ TABULAR.prototype.pushElementsInsideDiv = function (ele, classArr=[]) {
 TABULAR.prototype.createPageInfoSpan = function () {
     let pgSpan = '';
     //clear span if any
-    if(_$(this.pageInfoSpanId))
+    if (_$(this.pageInfoSpanId))
         pgSpan = _$(this.pageInfoSpanId);
-    else{
+    else {
         pgSpan = document.createElement("SPAN");
         pgSpan.id = this.pageInfoSpanId;
     }
@@ -224,7 +224,7 @@ TABULAR.prototype.createPageInfoSpan = function () {
 TABULAR.prototype.updatePageInfoSpan = function () {
     let pgSpan = '';
     //clear span if any
-    if(_$(this.pageInfoSpanId)){
+    if (_$(this.pageInfoSpanId)) {
         pgSpan = _$(this.pageInfoSpanId);
         pgSpan.innerHTML = ``;
         pgSpan.innerHTML = `Showing ${this.getCurrentPageInfo().get('startRow')} to ${this.getCurrentPageInfo().get('endRow')} of ${this.numOfRows} entries`;
@@ -238,8 +238,8 @@ TABULAR.prototype.createSearchInput = function () {
     return searchInput;
 }
 
-TABULAR.prototype.getNumberOfRows = function(){
-    if(this.tableData && this.tableData.length)
+TABULAR.prototype.getNumberOfRows = function () {
+    if (this.tableData && this.tableData.length)
         this.numOfRows = this.tableData.length;
     else
         this.numOfRows = this.tableEle.rows.length - 1; //-1 to remove header row in count
@@ -247,7 +247,7 @@ TABULAR.prototype.getNumberOfRows = function(){
     return this.numOfRows;
 }
 
-TABULAR.prototype.getNumberOfColumns = function(){
+TABULAR.prototype.getNumberOfColumns = function () {
     this.numOfColumns = this.tableEle.rows.item(0).cells.length;
     return this.numOfColumns;
 }
@@ -258,15 +258,15 @@ TABULAR.prototype.getTotalNumberOfPages = function () {
 }
 
 TABULAR.prototype.getCurrentPageInfo = function () {
-    let startRow = this.rowsPerPage * (this.currentPage-1) + 1;
-    let endRow = this.rowsPerPage * (this.currentPage-1) + this.rowsPerPage;
-    if(endRow > this.numOfRows)
+    let startRow = this.rowsPerPage * (this.currentPage - 1) + 1;
+    let endRow = this.rowsPerPage * (this.currentPage - 1) + this.rowsPerPage;
+    if (endRow > this.numOfRows)
         endRow = this.numOfRows;
 
     this.currentPageInfo.set('startRow', startRow);
     this.currentPageInfo.set('endRow', endRow);
-    this.currentPageInfo.set('startRowIndex', startRow-1);
-    this.currentPageInfo.set('endRowIndex', endRow-1);
+    this.currentPageInfo.set('startRowIndex', startRow - 1);
+    this.currentPageInfo.set('endRowIndex', endRow - 1);
     return this.currentPageInfo;
 }
 
@@ -283,7 +283,7 @@ TABULAR.prototype.getTableData = function () {
          */
         let hdrArrKeys = [];
         let headerRow = this.tableEle.rows.item(0).cells;
-        for(let hdr of headerRow){
+        for (let hdr of headerRow) {
             let val = hdr.innerHTML;
             this.headerMap[val.toLowerCase().replace(/[\s\\.]/, '_')] = val;
             hdrArrKeys.push(val.toLowerCase().replace(/[\s\\.]/, '_'));
@@ -294,20 +294,20 @@ TABULAR.prototype.getTableData = function () {
         /**
          * !!!IMPORTANT - Throwing error if no <TH> found for header cells...
          */
-        if("TH" !== this.tableEle.rows.item(0).cells.item(0).nodeName)
+        if ("TH" !== this.tableEle.rows.item(0).cells.item(0).nodeName)
             throw "No <TH> found inside header row. Please provide header cells with <TH>";
 
         //Considering first row as header row, which is mandatory
         let headerSkip = true;
-        for(let r of this.tableEle.rows){
-            if(headerSkip){
+        for (let r of this.tableEle.rows) {
+            if (headerSkip) {
                 headerSkip = false;
                 continue;
             }
 
             let localJson = {};
             let cellCount = 0;
-            while(cellCount < hdrArrKeys.length){
+            while (cellCount < hdrArrKeys.length) {
                 localJson[hdrArrKeys[cellCount]] = r.cells[cellCount].innerHTML;
                 cellCount++;
             }
@@ -315,33 +315,32 @@ TABULAR.prototype.getTableData = function () {
         }
         this.tableData = data;
     }
-    catch (err){
+    catch (err) {
         console.error(err);
     }
 }
 
 TABULAR.prototype.buildTableData = function (srcData, config = false) {
-    let headerMap = false;
+    let headerConfig = false;
     let data = [];
-    if(config && 'object' === typeof config && Object.keys(config).length){
+    if (config && 'object' === typeof config && Object.keys(config).length) {
         this.headerMap = this.setTableHeader(config);
-        headerMap = this.headerMap;
+        headerConfig = config;
     }
 
-    for(let row of srcData){
+    for (let row of srcData) {
         let arr = {};
-        if(headerMap){
-            Object.keys(headerMap).forEach(hm => {
+        if (headerConfig) {
+            Object.keys(headerConfig).forEach(hm => {
                 arr[hm] = {};
-            arr[hm] = row[hm] || "";
-        });
+                arr[hm] = headerConfig[hm] ? this.getCellDataAccordingToConfig(row[hm] || "", headerConfig[hm] || {}) : row[hm] || "";//row[hm] || "";
+            });
         } else {
             Object.keys(row).forEach(c => {
                 this.headerMap[c.toLowerCase().replace(/\s/, '-')] = c;
-
-            arr[c] = {};
-            arr[c] = row[c];
-        });
+                arr[c] = {};
+                arr[c] = row[c];
+            });
         }
         data.push(arr);
     }
@@ -349,16 +348,57 @@ TABULAR.prototype.buildTableData = function (srcData, config = false) {
     this.tableData = data;
 }
 
+TABULAR.prototype.getCellDataAccordingToConfig = (cell, conf) => {
+
+    if (conf && "html" !== conf["type"]) {
+        /**
+         * If type of Cell Entity is LINK
+         */
+        if("link" === conf["type"]){
+            let lnk = document.createElement("A");
+            lnk.href = cell;
+
+            if(conf["iconClass"]){
+                let icn = document.createElement("I");
+                conf["iconClass"].split(' ').forEach(cls => {
+                    icn.classList.add(cls);
+                });
+                lnk.appendChild(icn);
+            }
+
+            if(conf["title"]){
+                let t = document.createTextNode(conf["title"]);
+                lnk.appendChild(t);
+            } else {
+                let t = document.createTextNode("Link");
+                lnk.appendChild(t);
+            }
+
+            return lnk;
+        }
+        /**
+         * If type of Cell Entity is BUTTON
+         */
+        else if("button" === conf["type"]){
+            let btn = document.createElement("BUTTON");
+
+            return btn;
+        }
+    } else {
+        return cell;
+    }
+}
+
 TABULAR.prototype.setTableHeader = (config) => {
     let hMap = {};
     Object.keys(config).forEach(key => {
         hMap[key] = {};
-    hMap[key] = config[key] && config[key]["label"] ? config[key]["label"] : (key.toUpperCase() || key);
-})
+        hMap[key] = config[key] && config[key]["label"] ? config[key]["label"] : (key.toUpperCase() || key);
+    })
     return hMap;
 }
 
-TABULAR.prototype.setTableData = function(){
+TABULAR.prototype.setTableData = function () {
     //Clean the table first
     this.tableEle.innerHTML = '';
 
@@ -367,9 +407,9 @@ TABULAR.prototype.setTableData = function(){
     let hRow = head.insertRow(0);
     Object.keys(this.headerMap).forEach(hdr => {
         let hCell = document.createElement("TH");
-    hCell.innerHTML = this.headerMap[hdr];
-    hRow.appendChild(hCell);
-});
+        hCell.innerHTML = this.headerMap[hdr];
+        hRow.appendChild(hCell);
+    });
 
     // this.getCurrentPageInfo();
     //Now stitching data to table
@@ -378,17 +418,27 @@ TABULAR.prototype.setTableData = function(){
     let outerIndexLimit = this.currentPageInfo.get('endRowIndex');
     let tBody = this.tableEle.appendChild(document.createElement("TBODY"));
     let tRowIndex = 0;
-    while(outerIndex <= outerIndexLimit){
+    while (outerIndex <= outerIndexLimit) {
         let tRow = tBody.insertRow(tRowIndex);
         let innerIndex = 0;
         Object.keys(this.tableData[outerIndex]).forEach(cell => {
-            tRow.insertCell(innerIndex).innerHTML = this.tableData[outerIndex][cell];
-        innerIndex++;
-    });
-        // while(innerIndex < this.tableData[outerIndex].length){
-        //     tRow.insertCell(innerIndex).innerHTML = this.tableData[outerIndex][innerIndex];
-        //     innerIndex++;
-        // }
+            let content = this.tableData[outerIndex][cell];
+            if(!content.nodeType)
+                tRow.insertCell(innerIndex).innerHTML = content;
+            else{
+                let c = tRow.insertCell(innerIndex);
+                c.appendChild(content);
+            }
+            innerIndex++;
+        });
+        if (Object.keys(this.headerMap).length !== (innerIndex)) {
+            let diff = Object.keys(this.headerMap).length - (innerIndex);
+            while (diff !== 0) {
+                tRow.insertCell(innerIndex).innerHTML = "";
+                diff--;
+            }
+        }
+
         tRowIndex++;
         outerIndex++;
     }
@@ -401,10 +451,10 @@ TABULAR.prototype.redrawTable = function () {
 }
 
 TABULAR.prototype.changePage = function (tgtPage) {
-    if('NEXT' === tgtPage.value){
-        this.currentPage = this.currentPage+1;
-    } else if('PREV' === tgtPage.value) {
-        this.currentPage = this.currentPage-1;
+    if ('NEXT' === tgtPage.value) {
+        this.currentPage = this.currentPage + 1;
+    } else if ('PREV' === tgtPage.value) {
+        this.currentPage = this.currentPage - 1;
     } else {
         this.currentPage = parseInt(tgtPage.value);
     }
@@ -420,19 +470,19 @@ TABULAR.prototype.paginEnd = 5;
 TABULAR.prototype.getPaginationHtml = function (shift = false) {
     let paginHtml = [];
     let btnCount = this.paginStart;
-    while(btnCount <= this.paginEnd && btnCount <= this.getTotalNumberOfPages()){
+    while (btnCount <= this.paginEnd && btnCount <= this.getTotalNumberOfPages()) {
         let aTag = document.createElement("A");
         aTag.value = btnCount;
         aTag.text = btnCount;
         aTag.classList.add('paginate_button');
-        if(this.currentPage === btnCount)
+        if (this.currentPage === btnCount)
             aTag.classList.add('current');
         paginHtml.push(aTag);
         btnCount++;
     }
 
     let div1 = '';
-    if(shift && _$(this.paginationId)){
+    if (shift && _$(this.paginationId)) {
         div1 = _$(this.paginationId);
         div1.innerHTML = "";
     } else {
@@ -444,18 +494,18 @@ TABULAR.prototype.getPaginationHtml = function (shift = false) {
     aN.value = "NEXT";
     aN.innerHTML = "&#8680;";
     aN.classList.add('paginate_button');
-    if(this.getTotalNumberOfPages() === this.currentPage)
+    if (this.getTotalNumberOfPages() === this.currentPage)
         aN.classList.add('disabled');
 
     let aP = document.createElement("A");
     aP.value = "PREV";
     aP.innerHTML = "&#8678;";
     aP.classList.add('paginate_button');
-    if(1 === this.currentPage)
+    if (1 === this.currentPage)
         aP.classList.add('disabled');
 
     div1.appendChild(aP);
-    for(let t of paginHtml)
+    for (let t of paginHtml)
         div1.appendChild(t);
     div1.appendChild(aN);
 
@@ -463,10 +513,10 @@ TABULAR.prototype.getPaginationHtml = function (shift = false) {
 }
 
 TABULAR.prototype.modifyPagination = function () {
-    if((this.paginEnd - this.currentPage === 0) && this.getTotalNumberOfPages() !== this.currentPage){
+    if ((this.paginEnd - this.currentPage === 0) && this.getTotalNumberOfPages() !== this.currentPage) {
         this.paginEnd++;
         this.paginStart++;
-    } else if((this.currentPage - this.paginStart === 0) && 1 !== this.currentPage){
+    } else if ((this.currentPage - this.paginStart === 0) && 1 !== this.currentPage) {
         this.paginEnd--;
         this.paginStart--;
     }
@@ -478,11 +528,11 @@ TABULAR.prototype.initializeListeners = function () {
     /**
      * Handle All Click Events
      */
-    this.parentNode.addEventListener("click", function(e) {
+    this.parentNode.addEventListener("click", function (e) {
         /**
          * Handle Pagination Click Events Below
          */
-        if(e.target && e.target.value && e.target.classList.contains('paginate_button') && !e.target.classList.contains('disabled'))
+        if (e.target && e.target.value && e.target.classList.contains('paginate_button') && !e.target.classList.contains('disabled'))
             self.changePage(e.target);
         else
             return false;
@@ -491,16 +541,18 @@ TABULAR.prototype.initializeListeners = function () {
          * Handle Sorting Click Events Below
          */
         //--->(Put sorting handler here)
+
+
     });
 
     /**
      * Handle All Change Events
      */
-    this.parentNode.addEventListener("change", function(e) {
+    this.parentNode.addEventListener("change", function (e) {
         /**
          * Handle Row-Limit Change Event
          */
-        if(e.target && e.target.value && self.rwLimitId === e.target.id){
+        if (e.target && e.target.value && self.rwLimitId === e.target.id) {
             self.rowsPerPage = parseInt(e.target.value);
             self._init(true);
         } else
@@ -510,8 +562,8 @@ TABULAR.prototype.initializeListeners = function () {
     /**
      * Handle All KeyUp Events
      */
-    this.parentNode.addEventListener("keyup", function(e) {
-        if(e.target && e.target.value && '' !== e.target.value && "filter-keyword" === e.target.id){
+    this.parentNode.addEventListener("keyup", function (e) {
+        if (e.target && e.target.value && '' !== e.target.value && "filter-keyword" === e.target.id) {
             console.log(e.target.value);
         } else
             return false;
