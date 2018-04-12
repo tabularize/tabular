@@ -423,7 +423,7 @@ TABULAR.prototype.setTableData = function () {
         let innerIndex = 0;
         Object.keys(this.tableData[outerIndex]).forEach(cell => {
             let content = this.tableData[outerIndex][cell];
-            if(!content.nodeType)
+            if(null === content || !content.nodeType)
                 tRow.insertCell(innerIndex).innerHTML = content;
             else{
                 let c = tRow.insertCell(innerIndex);
