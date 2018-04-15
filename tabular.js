@@ -1,10 +1,11 @@
+/*jshint esversion: 6 */
 function TABULAR() {
     this.unique = parseInt(Math.random() * 1000).toString();
     this.eleId, this.tableEle, this.parentNode, this.tableHeadNode , this.tableFootNode, this.numOfRows , this.numOfColumns;
     this.headerMap = {};
     this.tableData = [];
-    this.rowLimitOps = [15, 30, 50, 100];
-    this.rowsPerPage = 5; //default
+    this.rowLimitOps = [10, 15, 30, 50, 100];
+    this.rowsPerPage = this.getMinInArray(this.rowLimitOps) || 5; //default
     this.currentPage = 1; //Default - required for pagination
     this.totalPages = this.getTotalNumberOfPages(); // required for pagination
     this.currentPageInfo = new Map();
@@ -24,6 +25,13 @@ function TABULAR() {
     this.filterKeywordId = 'flt-kw-' + this.unique;
 }
 
+TABULAR.prototype.getMinInArray = function (array) {
+    if(!array){
+      return null;
+   }
+   return Math.min(...array);
+};
+
 TABULAR.prototype.convertToTabular = function (id, headerConfig = false, actions = false) {
     if ('' === id || !id) {
         console.error("`id` of the Source Table required..");
@@ -42,7 +50,7 @@ TABULAR.prototype.convertToTabular = function (id, headerConfig = false, actions
     this.getTableData();
 
     this._init();
-}
+};
 
 /**
  * Call to build a 'tabular' table from an array of JSON
@@ -75,7 +83,7 @@ TABULAR.prototype.buildTabular = function (targetId, data, headerConfig = false,
     console.log(this.headerMap, this.tableData);
 
     this._init();
-}
+};
 
 TABULAR.prototype._init = function (update = false) {
     if (update) {
@@ -126,19 +134,19 @@ TABULAR.prototype._init = function (update = false) {
     if (this.getTotalNumberOfPages() > 1) {
         this.tableFootNode.appendChild(this.getPaginationHtml());
     }
-}
+};
 
 TABULAR.prototype.addDOMHeadProperties = function () {
     this.parentNode.insertBefore(this.attachTableTopDiv(), this.parentNode.firstChild);
     this.tableHeadNode = _$(this.tableHeadId);
-}
+};
 
 TABULAR.prototype.addDOMFootProperties = function () {
     if (_$(this.tableFootId))
         _$(this.tableFootId).innerHTML = '';
     this.parentNode.appendChild(this.attachTableBottomDiv());
     this.tableFootNode = _$(this.tableFootId);
-}
+};
 
 TABULAR.prototype.attachTableTopDiv = function () {
     let divEle = '';
@@ -156,7 +164,7 @@ TABULAR.prototype.attachTableTopDiv = function () {
     divEle.appendChild(this.createNumRowsDropDown());
     // divEle.appendChild(this.createSearchInput());
     return divEle;
-}
+};
 
 TABULAR.prototype.attachTableBottomDiv = function () {
     let divEle = '';
@@ -172,7 +180,7 @@ TABULAR.prototype.attachTableBottomDiv = function () {
     //Attaching the Rows per Page DropDown
     divEle.appendChild(this.createPageInfoSpan());
     return divEle;
-}
+};
 
 TABULAR.prototype.createNumRowsDropDown = function () {
     let dd = [];
@@ -188,7 +196,7 @@ TABULAR.prototype.createNumRowsDropDown = function () {
     });
     //Using function 'pushElementsInsideDiv' to put label and select inside one div
     return this.pushElementsInsideDiv(dd);
-}
+};
 
 /**
  * @param ele : array of elements to be pushed inside a div
@@ -205,7 +213,7 @@ TABULAR.prototype.pushElementsInsideDiv = function (ele, classArr = []) {
     for (let i of ele)
         divEle.appendChild(i);
     return divEle;
-}
+};
 
 TABULAR.prototype.createPageInfoSpan = function () {
     let pgSpan = '';
@@ -219,7 +227,7 @@ TABULAR.prototype.createPageInfoSpan = function () {
     pgSpan.innerHTML = ``;
     pgSpan.innerHTML = `Showing ${this.currentPageInfo.get('startRow')} to ${this.currentPageInfo.get('endRow')} of ${this.numOfRows} entries`;
     return pgSpan;
-}
+};
 
 TABULAR.prototype.updatePageInfoSpan = function () {
     let pgSpan = '';
@@ -229,14 +237,14 @@ TABULAR.prototype.updatePageInfoSpan = function () {
         pgSpan.innerHTML = ``;
         pgSpan.innerHTML = `Showing ${this.getCurrentPageInfo().get('startRow')} to ${this.getCurrentPageInfo().get('endRow')} of ${this.numOfRows} entries`;
     }
-}
+};
 
 TABULAR.prototype.createSearchInput = function () {
     let searchInput = document.createElement("INPUT");
     searchInput.id = this.filterKeywordId;
     searchInput.placeholder = "Search";
     return searchInput;
-}
+};
 
 TABULAR.prototype.getNumberOfRows = function () {
     if (this.tableData && this.tableData.length)
@@ -245,17 +253,17 @@ TABULAR.prototype.getNumberOfRows = function () {
         this.numOfRows = this.tableEle.rows.length - 1; //-1 to remove header row in count
 
     return this.numOfRows;
-}
+};
 
 TABULAR.prototype.getNumberOfColumns = function () {
     this.numOfColumns = this.tableEle.rows.item(0).cells.length;
     return this.numOfColumns;
-}
+};
 
 TABULAR.prototype.getTotalNumberOfPages = function () {
     this.totalPages = Math.ceil(this.numOfRows / this.rowsPerPage);
     return this.totalPages;
-}
+};
 
 TABULAR.prototype.getCurrentPageInfo = function () {
     let startRow = this.rowsPerPage * (this.currentPage - 1) + 1;
@@ -268,13 +276,13 @@ TABULAR.prototype.getCurrentPageInfo = function () {
     this.currentPageInfo.set('startRowIndex', startRow - 1);
     this.currentPageInfo.set('endRowIndex', endRow - 1);
     return this.currentPageInfo;
-}
+};
 
 TABULAR.prototype.updatePageInfo = function () {
     this.getTotalNumberOfPages();
     this.getCurrentPageInfo();
     this.updatePageInfoSpan();
-}
+};
 
 TABULAR.prototype.getTableData = function () {
     try {
@@ -318,7 +326,7 @@ TABULAR.prototype.getTableData = function () {
     catch (err) {
         console.error(err);
     }
-}
+};
 
 TABULAR.prototype.buildTableData = function (srcData, config = false) {
     let headerConfig = false;
@@ -346,7 +354,7 @@ TABULAR.prototype.buildTableData = function (srcData, config = false) {
     }
 
     this.tableData = data;
-}
+};
 
 TABULAR.prototype.getCellDataAccordingToConfig = (cell, conf) => {
 
@@ -387,7 +395,7 @@ TABULAR.prototype.getCellDataAccordingToConfig = (cell, conf) => {
     } else {
         return cell;
     }
-}
+};
 
 TABULAR.prototype.setTableHeader = (config) => {
     let hMap = {};
@@ -396,7 +404,7 @@ TABULAR.prototype.setTableHeader = (config) => {
         hMap[key] = config[key] && config[key]["label"] ? config[key]["label"] : (key.toUpperCase() || key);
     })
     return hMap;
-}
+};
 
 TABULAR.prototype.setTableData = function () {
     //Clean the table first
@@ -442,13 +450,13 @@ TABULAR.prototype.setTableData = function () {
         tRowIndex++;
         outerIndex++;
     }
-}
+};
 
 TABULAR.prototype.redrawTable = function () {
-    this.setTableData()
+    this.setTableData();
     this.updatePageInfoSpan();
     this.modifyPagination();
-}
+};
 
 TABULAR.prototype.changePage = function (tgtPage) {
     if ('NEXT' === tgtPage.value) {
@@ -460,7 +468,7 @@ TABULAR.prototype.changePage = function (tgtPage) {
     }
     this.getCurrentPageInfo();
     this.redrawTable();
-}
+};
 
 /**
  * PAGINATION
@@ -510,7 +518,7 @@ TABULAR.prototype.getPaginationHtml = function (shift = false) {
     div1.appendChild(aN);
 
     return div1;
-}
+};
 
 TABULAR.prototype.modifyPagination = function () {
     if ((this.paginEnd - this.currentPage === 0) && this.getTotalNumberOfPages() !== this.currentPage) {
@@ -521,7 +529,7 @@ TABULAR.prototype.modifyPagination = function () {
         this.paginStart--;
     }
     this.tableFootNode.appendChild(this.getPaginationHtml(true));
-}
+};
 
 TABULAR.prototype.initializeListeners = function () {
     let self = this;
@@ -568,8 +576,8 @@ TABULAR.prototype.initializeListeners = function () {
         } else
             return false;
     });
-}
+};
 
 _$ = function (id) {
     return document.getElementById(id);
-}
+};
