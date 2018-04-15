@@ -6,6 +6,10 @@
     overflow-x:auto;
 }
 
+.tabular-parent {
+    width: 100%;
+}
+
 .tabular {
     width: 100%;
     text-align: center;

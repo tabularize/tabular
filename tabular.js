@@ -37,6 +37,7 @@ TABULAR.prototype.convertToTabular = function (id, headerConfig = false, actions
     gparent.removeChild(this.tableEle);
     this.parentNode = this.pushElementsInsideDiv([this.pushElementsInsideDiv([this.tableEle], ["tb-ovrflw"])]);
     this.parentNode.id = 'tblr-prnt-' + this.unique;
+    this.parentNode.classList.add("tabular-parent");
     gparent.appendChild(this.parentNode);
 
     this.getTableData();
@@ -46,9 +47,10 @@ TABULAR.prototype.convertToTabular = function (id, headerConfig = false, actions
 
 /**
  * Call to build a 'tabular' table from an array of JSON
- * @param data - Array of JSON - REQUIRED
- * @param targetId - Target id of the element where the table will be appended - REQUIRED
- * @param config - Config JSON - OPTIONAL
+ * @param data - Array of JSON                                                  - REQUIRED
+ * @param targetId - Target id of the element where the table will be appended  - REQUIRED
+ * @param headerConfig - Config JSON                                            - OPTIONAL
+ * @param actions - Provide action buttons config                               - OPTIONAL
  */
 TABULAR.prototype.buildTabular = function (targetId, data, headerConfig = false, actions = false) {
     if (!data || 'object' !== typeof data) {
@@ -56,23 +58,21 @@ TABULAR.prototype.buildTabular = function (targetId, data, headerConfig = false,
         return false;
     }
 
-    // if(!targetId || '' === targetId){
-    //     console.error("Target Id of the element is required...");
-    //     return false;
-    // }
+    if(!targetId || '' === targetId){
+        console.error("Target Id of the element is required...");
+        return false;
+    }
 
     //Now creating new Table Element and its parent
     this.tableEle = document.createElement("TABLE");
     this.tableEle.id = "tabular_" + this.unique;
     this.tableEle.classList.add("tabular");
     // this.parentNode = this.pushElementsInsideDiv([this.tableEle]);
-    this.parentNode = this.pushElementsInsideDiv([this.pushElementsInsideDiv([this.tableEle], ["tb-ovrflw"])]);
+    this.parentNode = this.pushElementsInsideDiv([this.pushElementsInsideDiv([this.tableEle], ["tb-ovrflw"])], ["tabular-parent"]);
     let gp = _$(targetId);
     gp.appendChild(this.parentNode);
 
     this.buildTableData(data, headerConfig);
-    console.log(this.headerMap, "DATA->", this.tableData);
-    console.log(this.headerMap, this.tableData);
 
     this._init();
 }
@@ -564,7 +564,7 @@ TABULAR.prototype.initializeListeners = function () {
      */
     this.parentNode.addEventListener("keyup", function (e) {
         if (e.target && e.target.value && '' !== e.target.value && "filter-keyword" === e.target.id) {
-            console.log(e.target.value);
+            // console.log(e.target.value);
         } else
             return false;
     });
