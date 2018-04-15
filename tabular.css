@@ -22,6 +22,11 @@
     width: 100%;
 }
 
+.tabular thead {
+    background: #161e2c;
+    color: white;
+}
+
 .tabular td, .tabular th {
     border: 1px solid #ddd;
     padding: 8px;
@@ -29,7 +34,7 @@
 
 .tabular tr:nth-child(even){background-color: #f2f2f2;}
 
-.tabular tr:hover {background-color: #ddd;}
+.tabular tbody>tr:hover {background-color: #ddd;}
 
 .success-msg {
     color: green;
