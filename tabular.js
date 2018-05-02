@@ -1,7 +1,9 @@
+let global = {};
+
 /*jshint esversion: 6 */
 function TABULAR() {
     this.unique = parseInt(Math.random() * 1000).toString();
-    this.eleId, this.tableEle, this.parentNode, this.tableHeadNode , this.tableFootNode, this.numOfRows , this.numOfColumns;
+    this.eleId, this.tableEle, this.parentNode, this.tableHeadNode, this.tableFootNode, this.numOfRows, this.numOfColumns;
     this.headerMap = {};
     this.tableData = [];
     this.rowLimitOps = [10, 15, 30, 50, 100];
@@ -26,10 +28,10 @@ function TABULAR() {
 }
 
 TABULAR.prototype.getMinInArray = function (array) {
-    if(!array){
-      return null;
-   }
-   return Math.min(...array);
+    if (!array) {
+        return null;
+    }
+    return Math.min(...array);
 };
 
 TABULAR.prototype.convertToTabular = function (id, headerConfig = false, actions = false) {
@@ -60,13 +62,13 @@ TABULAR.prototype.convertToTabular = function (id, headerConfig = false, actions
  * @param headerConfig - Config JSON                                            - OPTIONAL
  * @param actions - Provide action buttons config                               - OPTIONAL
  */
-TABULAR.prototype.buildTabular = function (targetId, data, headerConfig = false, actions = false) {
+TABULAR.prototype.buildTabular = function (targetId, data, headerConfig = false, actions = false, preProcessFuncs = false) {
     if (!data || 'object' !== typeof data) {
         console.error("Invalid data format. The data must be an Array of Objects..");
         return false;
     }
 
-    if(!targetId || '' === targetId){
+    if (!targetId || '' === targetId) {
         console.error("Target Id of the element is required...");
         return false;
     }
@@ -178,7 +180,7 @@ TABULAR.prototype.attachTableBottomDiv = function () {
     if (!divEle.classList.contains("tfoot"))
         divEle.classList.add("tfoot");
     //Attaching the Rows per Page DropDown
-    divEle.appendChild(this.createPageInfoSpan());
+    divEle.appendChild(this.updatePageInfoSpan());
     return divEle;
 };
 
@@ -203,7 +205,6 @@ TABULAR.prototype.createNumRowsDropDown = function () {
  * @return {*} : the div element is returned containing the array elements as its children
  */
 TABULAR.prototype.pushElementsInsideDiv = function (ele, classArr = []) {
-    // console.log(ele);
     let divEle = document.createElement("DIV");
     if (classArr.length) {
         for (let c of classArr)
@@ -236,6 +237,17 @@ TABULAR.prototype.updatePageInfoSpan = function () {
         pgSpan = _$(this.pageInfoSpanId);
         pgSpan.innerHTML = ``;
         pgSpan.innerHTML = `Showing ${this.getCurrentPageInfo().get('startRow')} to ${this.getCurrentPageInfo().get('endRow')} of ${this.numOfRows} entries`;
+    } else {
+        //clear span if any
+        if (_$(this.pageInfoSpanId))
+            pgSpan = _$(this.pageInfoSpanId);
+        else {
+            pgSpan = document.createElement("SPAN");
+            pgSpan.id = this.pageInfoSpanId;
+        }
+        pgSpan.innerHTML = ``;
+        pgSpan.innerHTML = `Showing ${this.currentPageInfo.get('startRow')} to ${this.currentPageInfo.get('endRow')} of ${this.numOfRows} entries`;
+        return pgSpan;
     }
 };
 
@@ -246,11 +258,79 @@ TABULAR.prototype.createSearchInput = function () {
     return searchInput;
 };
 
+
+TABULAR.prototype.createStatusLabel = function (text, cls) {
+    let lbl = document.createElement("LABEL");
+    lbl.classList.add('label');
+    cls ? lbl.classList.add(cls) : lbl.classList.add("label-default");
+    lbl.innerText = text;
+    return lbl;
+};
+
+TABULAR.prototype.createModalPopupFromConf = function (h, b, f) {
+    this.createModalPopup(h, b, f);
+}
+
+TABULAR.prototype.createModalPopup = function (header, body, footer) {
+    let modal = document.createElement("DIV");
+    modal.classList.add('modal');
+
+    let closeBtn = document.createElement('BUTTON');
+    closeBtn.classList.add('close');
+    closeBtn.setAttribute('data-dismiss', 'modal');
+
+    let mDialog = document.createElement("DIV");
+    mDialog.classList.add('modal-dialog');
+    let mContent = document.createElement("DIV");
+    mContent.classList.add('modal-content');
+    let mHeader = document.createElement("DIV");
+    mHeader.classList.add('modal-header');
+    mHeader.innerHTML = header;
+    /**
+     * Adding Close Btn to header
+     */
+    let closeBtn1 = document.createElement('BUTTON');
+    let closeBtn2 = document.createElement('BUTTON');
+    closeBtn1.classList.add('close');
+    closeBtn1.setAttribute('data-dismiss', 'modal');
+    closeBtn2.setAttribute('data-dismiss', 'modal');
+    // let closeSpan = document.createElement('SPAN');
+    // closeSpan.setAttribute('aria-hidden', true);
+    // // closeSpan.innerText = `x`;
+    // closeBtn1.appendChild(closeSpan);
+    mHeader.appendChild(closeBtn1)
+
+    let mBody = document.createElement("DIV");
+    mBody.classList.add('modal-body');
+    mBody.innerHTML = body;
+    let mFooter = document.createElement("DIV");
+    mFooter.classList.add('modal-footer');
+    mFooter.innerHTML = footer;
+    /**
+     * Adding Close Btn to Footer
+     */
+    closeBtn2.classList.add('btn');
+    closeBtn2.classList.add('btn-default');
+    closeBtn2.innerText = 'Close';
+    mFooter.appendChild(closeBtn2);
+
+    mContent.appendChild(mHeader)
+    mContent.appendChild(mBody);
+    mContent.appendChild(mFooter);
+
+    mDialog.appendChild(mContent);
+
+    modal.appendChild(mDialog);
+
+    this.tableEle.parentElement.appendChild(modal);
+    return modal;
+}
+
 TABULAR.prototype.getNumberOfRows = function () {
     if (this.tableData && this.tableData.length)
         this.numOfRows = this.tableData.length;
     else
-        this.numOfRows = this.tableEle.rows.length - 1; //-1 to remove header row in count
+        this.numOfRows = 0;// this.numOfRows = this.tableEle.rows.length - 1; //-1 to remove header row in count
 
     return this.numOfRows;
 };
@@ -266,7 +346,7 @@ TABULAR.prototype.getTotalNumberOfPages = function () {
 };
 
 TABULAR.prototype.getCurrentPageInfo = function () {
-    let startRow = this.rowsPerPage * (this.currentPage - 1) + 1;
+    let startRow = this.numOfRows ? this.rowsPerPage * (this.currentPage - 1) + 1 : 0;
     let endRow = this.rowsPerPage * (this.currentPage - 1) + this.rowsPerPage;
     if (endRow > this.numOfRows)
         endRow = this.numOfRows;
@@ -335,13 +415,32 @@ TABULAR.prototype.buildTableData = function (srcData, config = false) {
         this.headerMap = this.setTableHeader(config);
         headerConfig = config;
     }
-
     for (let row of srcData) {
         let arr = {};
         if (headerConfig) {
-            Object.keys(headerConfig).forEach(hm => {
-                arr[hm] = {};
-                arr[hm] = headerConfig[hm] ? this.getCellDataAccordingToConfig(row[hm] || "", headerConfig[hm] || {}) : row[hm] || "";//row[hm] || "";
+            if (headerConfig["fields"]) {
+                Object.keys(headerConfig["fields"]).forEach(hm => {
+                    arr[hm] = {};
+                    arr[hm] = headerConfig["fields"][hm] && Object.keys(headerConfig["fields"][hm]).length ? this.getCellDataAccordingToConfig(this, row[hm] || "", headerConfig["fields"][hm] || {}) : row[hm] || "";//row[hm] || "";
+                });
+            }
+
+            if (headerConfig["_Labels_"]) {
+                arr["Labels_"] = "";
+            }
+            if (headerConfig["_Actions_"]) {
+                let actBtns = this.getActionButtons(headerConfig["_Actions_"], row);
+                if (actBtns)
+                    arr["_Actions_"] = actBtns;
+            }
+            Object.keys(row).forEach(c => {
+                if ((headerConfig['allowedAll'])) {
+                    if (!this.headerMap[c] && !this.headerMap[c.toLowerCase().replace(/\s/, '-')]) {
+                        this.headerMap[c.toLowerCase().replace(/\s/, '-')] = c;
+                        arr[c] = {};
+                        arr[c] = row[c];
+                    }
+                }
             });
         } else {
             Object.keys(row).forEach(c => {
@@ -352,21 +451,53 @@ TABULAR.prototype.buildTableData = function (srcData, config = false) {
         }
         data.push(arr);
     }
-
     this.tableData = data;
 };
 
-TABULAR.prototype.getCellDataAccordingToConfig = (cell, conf) => {
+TABULAR.prototype.getActionButtons = function (conf, row) {
+    let actConf = conf["actions"];
+    let preProcess = conf["actionConditions"]["preProcessor"];
+    let refFieldValue = row[conf["actionConditions"]["refField"]];
+    let allowedActions = [];
+    let btnDiv = document.createElement("DIV");
+    allowedActions = preProcess(refFieldValue);
+    for (let act of allowedActions) {
+        let cond = actConf[act] ? actConf[act] : false;
+        if (cond) {
+            let btn = document.createElement("BUTTON");
+            btn.classList.add('btn');
+            btn.classList.add(cond["buttonClass"] ? cond["buttonClass"] : 'btn-default');
+            btn.innerText = cond['title'] ? cond['title'] : "no title";
+            btn.setAttribute('row-data', JSON.stringify(row)); // Mandatory attribute containing row-data
+            if(cond["attributes"] && Object.keys(cond["attributes"]).length){
+                /**
+                 * Attach Attributes
+                 */
+            }
+            if(cond["func"] && "function" === typeof cond["func"]){
+                let self = this;
+                btn.addEventListener('click', (function () {
+                    // self.createModalPopup(self, row._id, `Modal Body`, `Modal Footer`);
+                    cond["func"](row);
+                }).bind(self));
+            }
+            
+            btnDiv.appendChild(btn);
+        }
+    }
+    return btnDiv;
+}
 
+TABULAR.prototype.getCellDataAccordingToConfig = function (self, cell, conf) {
     if (conf && "html" !== conf["type"]) {
         /**
          * If type of Cell Entity is LINK
          */
-        if("link" === conf["type"]){
+        if ("link" === conf["type"]) {
             let lnk = document.createElement("A");
             lnk.href = cell;
 
-            if(conf["iconClass"]){
+            if (conf["iconClass"]) {
                 let icn = document.createElement("I");
                 conf["iconClass"].split(' ').forEach(cls => {
                     icn.classList.add(cls);
@@ -374,7 +505,7 @@ TABULAR.prototype.getCellDataAccordingToConfig = (cell, conf) => {
                 lnk.appendChild(icn);
             }
 
-            if(conf["title"]){
+            if (conf["title"]) {
                 let t = document.createTextNode(conf["title"]);
                 lnk.appendChild(t);
             } else {
@@ -385,30 +516,70 @@ TABULAR.prototype.getCellDataAccordingToConfig = (cell, conf) => {
             return lnk;
         }
         /**
-         * If type of Cell Entity is BUTTON
+         * If type of Cell Entity is LABEL
          */
-        else if("button" === conf["type"]){
-            let btn = document.createElement("BUTTON");
+        else if ("label" === conf["type"]) {
+            let txt = cell;
+            let label = '';
+            if (conf["title"] && "string" === typeof conf["title"]) {
+                txt = conf["title"];
+                label = self.createStatusLabel(txt);
+            } else if (conf["title"] && "function" === typeof conf["title"]) {
+                txt = conf["title"](cell);
+                if ("object" === typeof txt) {
+                    if (txt[1]) {
+                        switch (txt[1]) {
+                            case "green":
+                                label = self.createStatusLabel(txt[0], 'label-green'); break;
+                            case "skyblue":
+                                label = self.createStatusLabel(txt[0], 'label-skyblue'); break;
+                            case "blue":
+                                label = self.createStatusLabel(txt[0], 'label-blue'); break;
+                            case "orange":
+                                label = self.createStatusLabel(txt[0], 'label-orange'); break;
+                            case "red":
+                                label = self.createStatusLabel(txt[0], 'label-red'); break;
+                            default:
+                                label = self.createStatusLabel(txt[0]); label.style.backgroundColor = txt[1]; break;
+                        }
+                    }
+                } else {
+                    label = self.createStatusLabel(txt);
+                }
 
-            return btn;
+            }
+
+            return label;
         }
     } else {
         return cell;
     }
-};
+}
 
-TABULAR.prototype.setTableHeader = (config) => {
+TABULAR.prototype.setTableHeader = function (config) {
     let hMap = {};
-    Object.keys(config).forEach(key => {
-        hMap[key] = {};
-        hMap[key] = config[key] && config[key]["label"] ? config[key]["label"] : (key.toUpperCase() || key);
-    })
+    Object.keys(config["fields"]).forEach(key => {
+        hMap[key] = '';
+        hMap[key] = config["fields"][key] && config["fields"][key]["label"] ? config["fields"][key]["label"] : (key.toUpperCase() || key);
+    });
+    if (headerConfig["_Labels_"]) {
+        hMap["_Labels_"] = "Labels";
+    }
+    if (headerConfig["_Actions_"]) {
+        hMap["_Actions_"] = "Actions";
+    }
     return hMap;
-};
+}
 
 TABULAR.prototype.setTableData = function () {
     //Clean the table first
     this.tableEle.innerHTML = '';
+
+    //Following case is when there is no data to display
+    if (!this.getNumberOfRows()) {
+        this.parentNode.innerHTML = `<div class="no-data">No data.</div>`;
+        return false;
+    }
 
     //Stitch Table Headers first
     let head = this.tableEle.createTHead();
@@ -431,9 +602,9 @@ TABULAR.prototype.setTableData = function () {
         let innerIndex = 0;
         Object.keys(this.tableData[outerIndex]).forEach(cell => {
             let content = this.tableData[outerIndex][cell];
-            if(null === content || !content.nodeType)
+            if (null === content || !content.nodeType)
                 tRow.insertCell(innerIndex).innerHTML = content;
-            else{
+            else {
                 let c = tRow.insertCell(innerIndex);
                 c.appendChild(content);
             }
@@ -540,11 +711,24 @@ TABULAR.prototype.initializeListeners = function () {
         /**
          * Handle Pagination Click Events Below
          */
-        if (e.target && e.target.value && e.target.classList.contains('paginate_button') && !e.target.classList.contains('disabled'))
+        if (e.target && e.target.value && e.target.classList.contains('paginate_button') && !e.target.classList.contains('disabled')) {
+            removeModal();
             self.changePage(e.target);
-        else
-            return false;
+        }
 
+        /**
+         * Handle Modal Close event
+         */
+        if (e.target && e.target.nodeName === 'BUTTON' && e.target.getAttribute('data-dismiss') === 'modal') {
+            removeModal();
+        }
+
+        function removeModal() {
+            let ele = document.getElementsByClassName('modal');
+            if (ele[0]) {
+                ele[0].parentNode.removeChild(ele[0]);
+            }
+        }
         /**
          * Handle Sorting Click Events Below
          */
@@ -572,7 +756,6 @@ TABULAR.prototype.initializeListeners = function () {
      */
     this.parentNode.addEventListener("keyup", function (e) {
         if (e.target && e.target.value && '' !== e.target.value && "filter-keyword" === e.target.id) {
-            // console.log(e.target.value);
         } else
             return false;
     });
