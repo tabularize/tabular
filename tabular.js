@@ -5,8 +5,9 @@ function TABULAR() {
     this.unique = parseInt(Math.random() * 1000).toString();
     this.eleId, this.tableEle, this.parentNode, this.tableHeadNode, this.tableFootNode, this.numOfRows, this.numOfColumns;
     this.headerMap = {};
+    this.srcData = [];
     this.tableData = [];
-    this.rowLimitOps = [10, 15, 30, 50, 100];
+    this.rowLimitOps = [15, 30, 50, 100];
     this.rowsPerPage = this.getMinInArray(this.rowLimitOps) || 5; //default
     this.currentPage = 1; //Default - required for pagination
     this.totalPages = this.getTotalNumberOfPages(); // required for pagination
@@ -25,6 +26,7 @@ function TABULAR() {
     this.rwLimitId = "rw-l-" + this.unique;
     this.paginationId = 'pgn-' + this.unique;
     this.filterKeywordId = 'flt-kw-' + this.unique;
+    this.dataFilters = {};
 }
 
 TABULAR.prototype.getMinInArray = function (array) {
@@ -138,6 +140,23 @@ TABULAR.prototype._init = function (update = false) {
     }
 };
 
+TABULAR.prototype._filter = function () {
+    let filteredData = [];
+    let filters = this.dataFilters;
+    for (let d of this.srcData) {
+        let cond = false;
+        Object.keys(filters).forEach(f => {
+            let cell = d[filters[f]["hdr"]];
+            let keyword = filters[f]["keyword"];
+            if (cell.nodeName && "LABEL" === cell.nodeName && cell.innerText === keyword)
+                filteredData.push(d);
+        });
+    }
+    this.tableData = filteredData;
+    console.log("filtered", this.tableData);
+    this._init(true);
+}
+
 TABULAR.prototype.addDOMHeadProperties = function () {
     this.parentNode.insertBefore(this.attachTableTopDiv(), this.parentNode.firstChild);
     this.tableHeadNode = _$(this.tableHeadId);
@@ -198,6 +217,27 @@ TABULAR.prototype.createNumRowsDropDown = function () {
     });
     //Using function 'pushElementsInsideDiv' to put label and select inside one div
     return this.pushElementsInsideDiv(dd);
+};
+
+TABULAR.prototype.createFilterDropDown = function (hdr, ops) {
+    let filter = '';
+    filter = document.createElement("SELECT");
+    filter.id = "filter-" + hdr + "-" + this.unique;
+    this.dataFilters[filter.id] = {};
+    this.dataFilters[filter.id]["hdr"] = hdr;
+
+    let defOp = new Option();
+    defOp.value = 'all';
+    defOp.text = '--All--';
+    filter.options.add(defOp);
+    ops.forEach(n => {
+        let op = new Option();
+        op.value = n;
+        op.text = n;
+        filter.options.add(op);
+    });
+    //Using function 'pushElementsInsideDiv' to put label and select inside one div
+    return this.pushElementsInsideDiv([filter], ['filter-dropdown']);
 };
 
 /**
@@ -408,7 +448,7 @@ TABULAR.prototype.getTableData = function () {
     }
 };
 
-TABULAR.prototype.buildTableData = function (srcData, config = false) {
+TABULAR.prototype.buildTableData = function (srcData, config = false, filter = false) {
     let headerConfig = false;
     let data = [];
     if (config && 'object' === typeof config && Object.keys(config).length) {
@@ -451,7 +491,12 @@ TABULAR.prototype.buildTableData = function (srcData, config = false) {
         }
         data.push(arr);
     }
+    this.srcData = data;
+    if (filter)
+        data = this._filter();
+
     this.tableData = data;
+    console.log(this.tableData);
 };
 
 TABULAR.prototype.getActionButtons = function (conf, row) {
@@ -469,19 +514,22 @@ TABULAR.prototype.getActionButtons = function (conf, row) {
             btn.classList.add(cond["buttonClass"] ? cond["buttonClass"] : 'btn-default');
             btn.innerText = cond['title'] ? cond['title'] : "no title";
             btn.setAttribute('row-data', JSON.stringify(row)); // Mandatory attribute containing row-data
-            if(cond["attributes"] && Object.keys(cond["attributes"]).length){
-                /**
-                 * Attach Attributes
-                 */
-            }
-            if(cond["func"] && "function" === typeof cond["func"]){
+            // if(cond["attributes"] && Object.keys(cond["attributes"]).length){
+            //     /**
+            //      * Attach Attributes
+            //      */
+            //     Object.keys(cond["attributes"]).forEach(k => {
+
+            //     });
+            // }
+            if (cond["func"] && "function" === typeof cond["func"]) {
                 let self = this;
                 btn.addEventListener('click', (function () {
                     // self.createModalPopup(self, row._id, `Modal Body`, `Modal Footer`);
                     cond["func"](row);
                 }).bind(self));
             }
-            
+
             btnDiv.appendChild(btn);
         }
     }
@@ -546,9 +594,7 @@ TABULAR.prototype.getCellDataAccordingToConfig = function (self, cell, conf) {
                 } else {
                     label = self.createStatusLabel(txt);
                 }
-
             }
-
             return label;
         }
     } else {
@@ -559,14 +605,19 @@ TABULAR.prototype.getCellDataAccordingToConfig = function (self, cell, conf) {
 TABULAR.prototype.setTableHeader = function (config) {
     let hMap = {};
     Object.keys(config["fields"]).forEach(key => {
-        hMap[key] = '';
-        hMap[key] = config["fields"][key] && config["fields"][key]["label"] ? config["fields"][key]["label"] : (key.toUpperCase() || key);
+        hMap[key] = {};
+        if (config["fields"][key]) {
+            hMap[key]['label'] = config["fields"][key]["label"] ? config["fields"][key]["label"] : (key.toUpperCase() || key);
+            hMap[key]['filter'] = config["fields"][key]["filter"] ? config["fields"][key]["filter"] : false;
+        }
     });
     if (headerConfig["_Labels_"]) {
-        hMap["_Labels_"] = "Labels";
+        hMap["_Labels_"] = {};
+        hMap["_Labels_"]["label"] = "Labels";
     }
     if (headerConfig["_Actions_"]) {
-        hMap["_Actions_"] = "Actions";
+        hMap["_Actions_"] = {};
+        hMap["_Actions_"]["label"] = "Actions";
     }
     return hMap;
 }
@@ -575,18 +626,15 @@ TABULAR.prototype.setTableData = function () {
     //Clean the table first
     this.tableEle.innerHTML = '';
 
-    //Following case is when there is no data to display
-    if (!this.getNumberOfRows()) {
-        this.parentNode.innerHTML = `<div class="no-data">No data.</div>`;
-        return false;
-    }
-
     //Stitch Table Headers first
     let head = this.tableEle.createTHead();
     let hRow = head.insertRow(0);
     Object.keys(this.headerMap).forEach(hdr => {
         let hCell = document.createElement("TH");
-        hCell.innerHTML = this.headerMap[hdr];
+        hCell.id = hdr;
+        hCell.innerText = this.headerMap[hdr]['label'];
+        if (this.headerMap[hdr]['filter'])
+            hCell.appendChild(this.createFilterDropDown(hdr, this.headerMap[hdr]['filter']));
         hRow.appendChild(hCell);
     });
 
@@ -596,8 +644,15 @@ TABULAR.prototype.setTableData = function () {
     let outerIndex = this.currentPageInfo.get('startRowIndex');
     let outerIndexLimit = this.currentPageInfo.get('endRowIndex');
     let tBody = this.tableEle.appendChild(document.createElement("TBODY"));
+
+    //Following case is when there is no data to display
+    if (!this.getNumberOfRows()) {
+        tBody = `<tr><td>No data.</td></tr>`;
+        return false;
+    }
+
     let tRowIndex = 0;
-    while (outerIndex <= outerIndexLimit) {
+    while (outerIndex <= outerIndexLimit && this.tableData[outerIndex]) {
         let tRow = tBody.insertRow(tRowIndex);
         let innerIndex = 0;
         Object.keys(this.tableData[outerIndex]).forEach(cell => {
@@ -747,6 +802,14 @@ TABULAR.prototype.initializeListeners = function () {
         if (e.target && e.target.value && self.rwLimitId === e.target.id) {
             self.rowsPerPage = parseInt(e.target.value);
             self._init(true);
+        }
+
+        /**
+         * Handle Filters Change Event
+         */
+        if (e.target && e.target.value && Object.keys(self.dataFilters).indexOf(e.target.id) > -1) {
+            self.dataFilters[e.target.id]["keyword"] = e.target.value;
+            self._filter(true);
         } else
             return false;
     });
