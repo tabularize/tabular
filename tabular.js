@@ -26,6 +26,7 @@ function TABULAR() {
     this.rwLimitId = "rw-l-" + this.unique;
     this.paginationId = 'pgn-' + this.unique;
     this.filterKeywordId = 'flt-kw-' + this.unique;
+    this.tbodyId = 'tbody-' + this.unique;
     this.dataFilters = {};
 }
 
@@ -94,6 +95,11 @@ TABULAR.prototype._init = function (update = false) {
         this.currentPage = 1;
 
         /**
+         * Updating Number of Rows
+         */
+        this.getNumberOfRows();
+
+        /**
          * Setting current page info
          */
         this.getCurrentPageInfo();
@@ -120,6 +126,8 @@ TABULAR.prototype._init = function (update = false) {
          */
         this.addDOMHeadProperties();
         this.addDOMFootProperties();
+
+        this.setTableHeaderData();
     }
 
     /**
@@ -144,16 +152,22 @@ TABULAR.prototype._filter = function () {
     let filteredData = [];
     let filters = this.dataFilters;
     for (let d of this.srcData) {
-        let cond = false;
+        let cond = true;
         Object.keys(filters).forEach(f => {
             let cell = d[filters[f]["hdr"]];
             let keyword = filters[f]["keyword"];
-            if (cell.nodeName && "LABEL" === cell.nodeName && cell.innerText === keyword)
-                filteredData.push(d);
+            if (keyword) {
+                if (cell.nodeName && "LABEL" === cell.nodeName && cell.innerText === keyword)
+                    cond = cond && true;
+                else
+                    cond = cond && false;
+            }
         });
+        if (cond)
+            filteredData.push(d);
     }
     this.tableData = filteredData;
-    console.log("filtered", this.tableData);
+    // console.log("filtered", this.tableData);
     this._init(true);
 }
 
@@ -227,7 +241,7 @@ TABULAR.prototype.createFilterDropDown = function (hdr, ops) {
     this.dataFilters[filter.id]["hdr"] = hdr;
 
     let defOp = new Option();
-    defOp.value = 'all';
+    defOp.value = "--all--";
     defOp.text = '--All--';
     filter.options.add(defOp);
     ops.forEach(n => {
@@ -274,9 +288,10 @@ TABULAR.prototype.updatePageInfoSpan = function () {
     let pgSpan = '';
     //clear span if any
     if (_$(this.pageInfoSpanId)) {
+        this.getCurrentPageInfo(); //Updating Indices
         pgSpan = _$(this.pageInfoSpanId);
         pgSpan.innerHTML = ``;
-        pgSpan.innerHTML = `Showing ${this.getCurrentPageInfo().get('startRow')} to ${this.getCurrentPageInfo().get('endRow')} of ${this.numOfRows} entries`;
+        pgSpan.innerHTML = `Showing ${this.currentPageInfo.get('startRow')} to ${this.currentPageInfo.get('endRow')} of ${this.numOfRows} entries`;
     } else {
         //clear span if any
         if (_$(this.pageInfoSpanId))
@@ -398,11 +413,11 @@ TABULAR.prototype.getCurrentPageInfo = function () {
     return this.currentPageInfo;
 };
 
-TABULAR.prototype.updatePageInfo = function () {
-    this.getTotalNumberOfPages();
-    this.getCurrentPageInfo();
-    this.updatePageInfoSpan();
-};
+// TABULAR.prototype.updatePageInfo = function () {
+//     this.getTotalNumberOfPages();
+//     this.getCurrentPageInfo();
+//     this.updatePageInfoSpan();
+// };
 
 TABULAR.prototype.getTableData = function () {
     try {
@@ -460,6 +475,14 @@ TABULAR.prototype.buildTableData = function (srcData, config = false, filter = f
         if (headerConfig) {
             if (headerConfig["fields"]) {
                 Object.keys(headerConfig["fields"]).forEach(hm => {
+                    // if (hm.indexOf('->') > -1) {
+                    //     hmE = hm.split('->');
+                    //     arr[hm] = {};
+                    //     arr[hm] = this.getCellDataAccordingToConfig(this, row[hmE[0]][hmE[1]] || "", headerConfig["fields"][hm] || {});
+                    // } else {
+                    //     arr[hm] = {};
+                    //     arr[hm] = this.getCellDataAccordingToConfig(this, row[hm] || "", headerConfig["fields"][hm] || {});
+                    // }
                     arr[hm] = {};
                     arr[hm] = headerConfig["fields"][hm] && Object.keys(headerConfig["fields"][hm]).length ? this.getCellDataAccordingToConfig(this, row[hm] || "", headerConfig["fields"][hm] || {}) : row[hm] || "";//row[hm] || "";
                 });
@@ -484,7 +507,8 @@ TABULAR.prototype.buildTableData = function (srcData, config = false, filter = f
             });
         } else {
             Object.keys(row).forEach(c => {
-                this.headerMap[c.toLowerCase().replace(/\s/, '-')] = c;
+                this.headerMap[c.toLowerCase().replace(/\s/, '-')] = {};
+                this.headerMap[c.toLowerCase().replace(/\s/, '-')].label = c;
                 arr[c] = {};
                 arr[c] = row[c];
             });
@@ -496,23 +520,43 @@ TABULAR.prototype.buildTableData = function (srcData, config = false, filter = f
         data = this._filter();
 
     this.tableData = data;
-    console.log(this.tableData);
 };
 
 TABULAR.prototype.getActionButtons = function (conf, row) {
     let actConf = conf["actions"];
-    let preProcess = conf["actionConditions"]["preProcessor"];
-    let refFieldValue = row[conf["actionConditions"]["refField"]];
+    let preProcess = conf["actionConditions"]["preProcessor"] || false;
+    let refFieldValue = conf["actionConditions"]["refField"] || false;
     let allowedActions = [];
     let btnDiv = document.createElement("DIV");
-    allowedActions = preProcess(refFieldValue);
+
+    // allowedActions = preProcess(refFieldValue);
+    if (!preProcess) {
+        allowedActions = Object.keys(actConf);
+    } else {
+        if (!refFieldValue)
+            allowedActions = preProcess(row);
+        else
+            allowedActions = preProcess(row[refFieldValue]);
+    }
+
     for (let act of allowedActions) {
         let cond = actConf[act] ? actConf[act] : false;
         if (cond) {
             let btn = document.createElement("BUTTON");
             btn.classList.add('btn');
             btn.classList.add(cond["buttonClass"] ? cond["buttonClass"] : 'btn-default');
-            btn.innerText = cond['title'] ? cond['title'] : "no title";
+
+            // btn.innerText = cond['title'] ? cond['title'] : "no title";
+            let txt = '';
+            if (cond["title"] && "string" === typeof cond["title"]) {
+                txt = cond["title"];
+            } else if (cond["title"] && "function" === typeof cond["title"]) {
+                txt = cond["title"](row);
+            } else {
+                txt = "No-title";
+            }
+            btn.innerText = txt;
+
             btn.setAttribute('row-data', JSON.stringify(row)); // Mandatory attribute containing row-data
             // if(cond["attributes"] && Object.keys(cond["attributes"]).length){
             //     /**
@@ -537,7 +581,7 @@ TABULAR.prototype.getActionButtons = function (conf, row) {
 }
 
 TABULAR.prototype.getCellDataAccordingToConfig = function (self, cell, conf) {
-    if (conf && "html" !== conf["type"]) {
+    if (conf && conf["type"] && "html" !== conf["type"]) {
         /**
          * If type of Cell Entity is LINK
          */
@@ -559,6 +603,15 @@ TABULAR.prototype.getCellDataAccordingToConfig = function (self, cell, conf) {
             } else {
                 let t = document.createTextNode("Link");
                 lnk.appendChild(t);
+            }
+
+            if (conf["attributes"] && Object.keys(conf["attributes"]).length) {
+                /**
+                * Attach Attributes
+                */
+                Object.keys(conf["attributes"]).forEach(k => {
+                    lnk.setAttribute(k, conf["attributes"][k]);
+                });
             }
 
             return lnk;
@@ -611,18 +664,18 @@ TABULAR.prototype.setTableHeader = function (config) {
             hMap[key]['filter'] = config["fields"][key]["filter"] ? config["fields"][key]["filter"] : false;
         }
     });
-    if (headerConfig["_Labels_"]) {
+    if (config["_Labels_"]) {
         hMap["_Labels_"] = {};
         hMap["_Labels_"]["label"] = "Labels";
     }
-    if (headerConfig["_Actions_"]) {
+    if (config["_Actions_"]) {
         hMap["_Actions_"] = {};
         hMap["_Actions_"]["label"] = "Actions";
     }
     return hMap;
 }
 
-TABULAR.prototype.setTableData = function () {
+TABULAR.prototype.setTableHeaderData = function () {
     //Clean the table first
     this.tableEle.innerHTML = '';
 
@@ -637,19 +690,29 @@ TABULAR.prototype.setTableData = function () {
             hCell.appendChild(this.createFilterDropDown(hdr, this.headerMap[hdr]['filter']));
         hRow.appendChild(hCell);
     });
+}
 
-    // this.getCurrentPageInfo();
-    //Now stitching data to table
-    //Calculate Starting Index
-    let outerIndex = this.currentPageInfo.get('startRowIndex');
-    let outerIndexLimit = this.currentPageInfo.get('endRowIndex');
-    let tBody = this.tableEle.appendChild(document.createElement("TBODY"));
+TABULAR.prototype.setTableData = function () {
+    let tBody;
+    if (_$(this.tbodyId)) {
+        _$(this.tbodyId).innerHTML = '';
+        tBody = _$(this.tbodyId);
+    } else {
+        tBody = this.tableEle.appendChild(document.createElement("TBODY"));
+        tBody.id = this.tbodyId;
+    }
 
     //Following case is when there is no data to display
     if (!this.getNumberOfRows()) {
         tBody = `<tr><td>No data.</td></tr>`;
         return false;
     }
+
+    //Now stitching data to table
+    //Calculate Starting Index
+    // this.getCurrentPageInfo(); //Updating Indices
+    let outerIndex = this.currentPageInfo.get('startRowIndex');
+    let outerIndexLimit = this.currentPageInfo.get('endRowIndex');
 
     let tRowIndex = 0;
     while (outerIndex <= outerIndexLimit && this.tableData[outerIndex]) {
@@ -808,7 +871,11 @@ TABULAR.prototype.initializeListeners = function () {
          * Handle Filters Change Event
          */
         if (e.target && e.target.value && Object.keys(self.dataFilters).indexOf(e.target.id) > -1) {
-            self.dataFilters[e.target.id]["keyword"] = e.target.value;
+            if ('--all--' !== e.target.value)
+                self.dataFilters[e.target.id]["keyword"] = e.target.value;
+            else
+                self.dataFilters[e.target.id]["keyword"] = false;
+
             self._filter(true);
         } else
             return false;

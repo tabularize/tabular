@@ -150,52 +150,53 @@
     font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
 } */
 .label-default {
-    background-color: #777;
+    border: 2px solid #777;
 }
 .label-blue {
-    background-color: #337ab7;
+    border: 2px solid  #337ab7;
 }
 .label-green {
-    background-color: #5cb85c;
+    border: 2px solid  #5cb85c;
 }
 .label-red {
-    background-color: #d9534f;
+    border: 2px solid  #d9534f;
 }
 .label-skyblue {
-    background-color: #5bc0de;
+    border: 2px solid  #5bc0de;
 }
 .label-orange {
-    background-color: #f0ad4e;
+    border: 2px solid  #f0ad4e;
 }
 .label {
     display: inline;
-    padding: .2em .6em .3em;
-    font-size: 75%;
+    padding: 0.3em .7em .4em;
+    font-size: 94%;
+    font-weight: 500;
     /* font-weight: 700; */
     line-height: 1;
-    color: #fff;
+    color: #000;
     text-align: center;
     white-space: nowrap;
     vertical-align: baseline;
-    border-radius: .25em;
+    border-radius: 0.25em;
 }
 
 /*Modal CSS*/
 .modal {
-    position: absolute;
+    position: fixed;
     top: 0;
     right: 0;
     bottom: 0;
     left: 0;
-    z-index: 1050;
+    z-index: 1000;
     background-color: #7777777a;
     /* font-family: "Trebuchet MS", Arial, Helvetica, sans-serif; */
 }
 
 .modal-dialog {
     position: relative;
-    width: 600px;
-    margin: 30px auto;
+    width: 750px;
+    margin: 150px auto;
     background: white;
     z-index: 2000;
 }
@@ -220,6 +221,7 @@
 .modal-header {
     padding: 10px;
     border-bottom: 1px solid #e5e5e5;
+    font-size: 16px
 }
 
 .modal-body {
@@ -227,7 +229,36 @@
     padding: 15px;
 }
 
+.modal-body label{
+    font-weight: 600;
+    margin-right: 5px
+}
+
+.modal-body input{
+    line-height: 3;
+    background-color: rgba(255, 255, 255, 0.863);
+    border: 1.5px solid;
+    font-size: 13px;
+    padding: 0 0 0 3px;
+    margin: 3px 0 3px 0;
+}
+
+.modal-body input:disabled{
+    background-color: #cccccc7a;
+}
+
+.modal-body textarea{
+    background-color: rgba(255, 255, 255, 0.863);
+    border: 1.5px solid;
+    font-size: 13px;
+}
+
+.modal-body textarea:disabled{
+    background-color: #cccccc7a;
+}
+
 .modal-footer {
+    clear: both;
     padding: 5px;
     text-align: right;
     border-top: 1px solid #e5e5e5;
@@ -327,7 +358,7 @@ button.close {
 .btn {
     display: inline-block;
     padding: 6px 12px;
-    margin-bottom: 0;
+    margin: 2px 2px;
     font-size: 14px;
     font-weight: 400;
     line-height: 1.42857143;
@@ -520,6 +551,24 @@ button.close {
     -webkit-box-shadow: none;
     box-shadow: none;
     opacity: .65;
+}
+
+.cdd-frm label{
+    width: 100%;
+    margin-bottom: 4px;
+    float: left;
+}
+
+.cdd-frm input{
+    width: 100%;
+    margin-bottom: 4px;
+    float: left;
+}
+
+.cdd-frm-div{
+    width: 45%;
+    float: left;
+    margin-right: 10px;
 }
 
 .filter-dropdown {
